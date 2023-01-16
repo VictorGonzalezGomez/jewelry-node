@@ -15,7 +15,6 @@ const getJewelry  = async (
         limits,
         offset
     );
-    console.log("~~FORMAT----->",queryFormat)
     try {
         const { rows: inventario } = await pool.query(queryFormat);
         return inventario;
@@ -28,4 +27,26 @@ const getJewelry  = async (
     }
 };
 
-module.exports = { getJewelry }
+const getFilteredJewelry = async ({precio_max, precio_min, categoria, metal }) => {
+    try {
+        let filters = [];
+        if(precio_max) filters.push(`precio <= ${precio_max}`);
+        if(precio_min) filters.push(`precio >= ${precio_min}`);
+        if (categoria)  filters.push(`categoria = '${categoria}'`);
+        if (metal)  filters.push(`metal = '${metal}'`);
+        let filteredQuery = "SELECT * FROM inventario";
+        if (filters.length > 0) {
+            filters = filters.join(" AND ");
+            filteredQuery += ` WHERE ${filters}`;
+        };
+        const {rows : joyas } = await pool.query(filteredQuery);
+        return joyas
+    }catch (e) {
+        console.log(
+            "MODEL --> ERROR GETTING FILTERED JEWELRY FROM TABLE ~~inventario~~ :",
+            e.code,
+            e.message);
+        throw new Error(e)
+    }
+}
+module.exports = { getJewelry,getFilteredJewelry }
