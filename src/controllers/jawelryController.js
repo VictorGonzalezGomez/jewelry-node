@@ -1,15 +1,37 @@
-const express = require("express");
-const app = express();
-const cors = require("cors");
-const PORT = 3000;
+const {
+    getJewelry
+} = require("../models/jewelryModel");
 
+const gettingAllJewelry = async (req, res) => {
+    try {
+        const { limit } = req.query;
+        const jewelry = await getJewelry(limit);
+        console.log("CONTROLLER GET ALL (jewelry):", jewelry);
+        const  HATEOAS = prepHATEOAS(jewelry);
+        console.log("HATEOAS GET IN CONTROLLER:",HATEOAS);
+        res.json(HATEOAS);
+    }catch (e) {
+        console.log(e);
+        res.status(500).json({ message:"CONTROLLER--> ERROR GETTING JEWELRY"});
+    }
+}
 
-app.use(cors());
-app.use(express.json());
+const prepHATEOAS = (jewelry) => {
+    const results = jewelry
+        .map((jewel) => {
+            return {
+                name: jewel.nombre,
+                href: `/joyas/${jewel.id}`,
+            };
+        })
+        .slice(0, 6);
+    console.log("RESULT IN PREP:",results);
+    const totalJewelry = jewelry.length;
+    const HATEOAS = {
+        totalJewelry,
+        results
+    };
+    return HATEOAS;
+}
 
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
-
-
-module.exports = app;
+module.exports = {gettingAllJewelry}
